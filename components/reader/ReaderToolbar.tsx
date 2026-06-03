@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Moon, Sun, Type } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { TextToSpeech } from './TextToSpeech';
 
 type FontSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -10,6 +11,8 @@ interface ReaderToolbarProps {
   fontSize: FontSize;
   onFontSizeChange: (size: FontSize) => void;
   scrollPercent: number;
+  chapterText?: string;
+  chapterTitle?: string;
 }
 
 const fontSizes: { size: FontSize; label: string; className: string }[] = [
@@ -23,13 +26,15 @@ export function ReaderToolbar({
   fontSize,
   onFontSizeChange,
   scrollPercent,
+  chapterText,
+  chapterTitle,
 }: ReaderToolbarProps) {
   const { theme, setTheme } = useTheme();
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 px-4 py-3">
-      <div className="flex items-center justify-between max-w-4xl mx-auto gap-4">
+      <div className="flex items-center justify-between max-w-4xl mx-auto gap-2">
         {/* Font size control */}
         <div className="relative">
           <button
@@ -62,6 +67,9 @@ export function ReaderToolbar({
             </div>
           )}
         </div>
+
+        {/* Text-to-Speech */}
+        {chapterText && <TextToSpeech text={chapterText} chapterTitle={chapterTitle} />}
 
         {/* Theme toggle */}
         <button

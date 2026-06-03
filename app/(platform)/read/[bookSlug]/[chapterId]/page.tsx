@@ -8,6 +8,7 @@ import { ChapterContent } from '@/components/reader/ChapterContent';
 import { ReaderHeader } from '@/components/reader/ReaderHeader';
 import { ReaderToolbar } from '@/components/reader/ReaderToolbar';
 import { TableOfContents } from '@/components/reader/TableOfContents';
+import { extractPlainText } from '@/lib/markdown-utils';
 import Link from 'next/link';
 
 interface Chapter {
@@ -196,6 +197,8 @@ export default function ChapterPage({ params: paramsPromise }: PageProps) {
           fontSize={fontSize}
           onFontSizeChange={handleFontSizeChange}
           scrollPercent={scrollPercent}
+          chapterText={extractPlainText(currentChapter.content)}
+          chapterTitle={currentChapter.title}
         />
       </div>
     </div>
