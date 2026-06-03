@@ -64,6 +64,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     signIn: async ({ user, account }) => {
       if (account?.provider === 'google' && user.id) {
+        // Mark email as verified for Google OAuth
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        });
+
         let product = await prisma.product.findUnique({
           where: { slug: 'custo-de-oportunidade' },
         });
