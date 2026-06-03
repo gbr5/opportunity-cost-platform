@@ -6,8 +6,10 @@ import * as path from 'path';
 import * as bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 
+const connectionString = process.env.DB_ || process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/opportunitycost';
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/opportunitycost',
+  connectionString,
 });
 
 const adapter = new PrismaPg(pool);
