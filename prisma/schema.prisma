@@ -1,0 +1,248 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  emailVerified    DateTime?
+  passwordHash     String?
+  name             String?
+  image            String?
+  role             Role               @default(USER)
+  stripeCustomerId String?            @unique
+  createdAt        DateTime           @default(now())
+
+  accounts    Account[]
+  sessions    Session[]
+  purchases   Purchase[]
+  accesses    Access[]
+  readingProgress ReadingProgress[]
+  highlights      Highlight[]
+  preferences     ReaderPreferences?
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+// Generic sellable unit: book, course, download, event, newsletter
+model Product {
+  id          String        @id @default(cuid())
+  type        ProductType
+  title       String
+  slug        String        @unique
+  description String        @db.Text
+  coverUrl    String?
+  status      ProductStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  prices     Price[]
+  chapters   Chapter[]
+  purchases  Purchase[]
+  accesses   Access[]
+  progress   ReadingProgress[]
+}
+
+enum ProductType {
+  BOOK
+  COURSE
+  DOWNLOAD
+  EVENT
+  NEWSLETTER
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Price variants per product (early bird, standard, bundle, etc.)
+model Price {
+  id            String    @id @default(cuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label         String?   // "Early bird", "Standard", null = default
+  amountCents   Int
+  currency      String    @default("BRL")
+  isDefault     Boolean   @default(false)
+  active        Boolean   @default(true)
+  stripePriceId String?   @unique
+  createdAt     DateTime  @default(now())
+
+  purchases     Purchase[]
+
+  @@unique([productId, label])
+}
+
+model Chapter {
+  id        String            @id @default(cuid())
+  productId String
+  product   Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title     String
+  slug      String
+  order     Int
+  content   String            @db.Text
+  published Boolean           @default(true)
+  createdAt DateTime          @default(now())
+
+  highlights    Highlight[]
+  progress      ReadingProgress[]
+
+  @@unique([productId, slug])
+}
+
+// Permanent financial record — never deleted, even on refund
+model Purchase {
+  id                    String         @id @default(cuid())
+  userId                String
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId             String
+  product               Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceId               String
+  price                 Price          @relation(fields: [priceId], references: [id], onDelete: Restrict)
+  amountPaidCents       Int
+  currency              String         @default("BRL")
+  couponId              String?
+  coupon                Coupon?        @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  stripeSessionId       String?        @unique
+  stripePaymentIntentId String?
+  status                PurchaseStatus @default(PENDING)
+  createdAt             DateTime       @default(now())
+
+  @@unique([userId, productId])
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+}
+
+// Decoupled access control — what the user can actually open right now
+model Access {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  expiresAt DateTime? // null = permanent; set for trials/subscriptions
+  revokedAt DateTime? // set on refund or admin revoke (soft delete)
+  note      String?   // "purchased", "admin grant", "coupon FREEBOOK", etc.
+  grantedAt DateTime  @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  discountType  DiscountType
+  discountValue Int          // percent (0-100) or fixed cents
+  maxUses       Int?
+  currentUses   Int          @default(0)
+  expiresAt     DateTime?
+  createdAt     DateTime     @default(now())
+
+  purchases     Purchase[]
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+  FREE
+}
+
+model ReadingProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  chapterId     String
+  chapter       Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  scrollPercent Float    @default(0)
+  lastReadAt    DateTime @updatedAt
+
+  @@unique([userId, productId])
+}
+
+model Highlight {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId     String
+  chapter       Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  selectedText  String   @db.Text
+  note          String?  @db.Text
+  color         String   @default("yellow")
+  positionStart Int
+  positionEnd   Int
+  createdAt     DateTime @default(now())
+}
+
+model ReaderPreferences {
+  id       String   @id @default(cuid())
+  userId   String   @unique
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme    Theme    @default(LIGHT)
+  fontSize FontSize @default(MD)
+  updatedAt DateTime @updatedAt
+}
+
+enum Theme {
+  LIGHT
+  DARK
+}
+
+enum FontSize {
+  SM
+  MD
+  LG
+  XL
+}
