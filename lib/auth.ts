@@ -62,5 +62,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+    signIn: async ({ user, account }) => {
+      if (account?.provider === 'google' && user.id) {
+        const product = await prisma.product.findUnique({
+          where: { slug: 'custo-de-oportunidade' },
+        });
+
+        if (product) {
+          await prisma.access.upsert({
+            where: {
+              userId_productId: {
+                userId: user.id,
+                productId: product.id,
+              },
+            },
+            update: {},
+            create: {
+              userId: user.id,
+              productId: product.id,
+              note: 'google-oauth-auto-grant',
+            },
+          });
+        }
+      }
+      return true;
+    },
   },
 });
