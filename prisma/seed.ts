@@ -6,7 +6,10 @@ import * as path from 'path';
 import * as bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 
-const connectionString = process.env.DB_ || process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/opportunitycost';
+const connectionString =
+  process.env.DB_POSTGRES_PRISMA_URL ||
+  process.env.DATABASE_URL ||
+  'postgresql://postgres:postgres@localhost:5433/opportunitycost';
 
 const pool = new Pool({
   connectionString,
