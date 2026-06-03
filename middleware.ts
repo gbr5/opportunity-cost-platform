@@ -1,7 +1,6 @@
 import { auth } from '@/lib/auth';
 
-export default auth((req) => {
-  // Routes that require authentication
+export const middleware = auth((req) => {
   const protectedRoutes = ['/read', '/library'];
 
   if (protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
@@ -16,3 +15,5 @@ export default auth((req) => {
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
+
+export const runtime = 'nodejs';

@@ -5,15 +5,16 @@ import { prisma } from '@/lib/prisma';
 export default async function ReadRedirectPage({
   params,
 }: {
-  params: { bookSlug: string };
+  params: Promise<{ bookSlug: string }>;
 }) {
+  const { bookSlug } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     redirect('/login');
   }
 
   const product = await prisma.product.findUnique({
-    where: { slug: params.bookSlug },
+    where: { slug: bookSlug },
     include: {
       chapters: {
         orderBy: { order: 'asc' },
@@ -57,5 +58,5 @@ export default async function ReadRedirectPage({
     redirect('/');
   }
 
-  redirect(`/read/${params.bookSlug}/${chapterId}`);
+  redirect(`/read/${bookSlug}/${chapterId}`);
 }

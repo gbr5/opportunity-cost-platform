@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, use } from 'react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/auth';
@@ -19,13 +19,14 @@ interface Chapter {
 }
 
 interface PageProps {
-  params: {
+  params: Promise<{
     bookSlug: string;
     chapterId: string;
-  };
+  }>;
 }
 
-export default function ChapterPage({ params }: PageProps) {
+export default function ChapterPage({ params: paramsPromise }: PageProps) {
+  const params = use(paramsPromise);
   const router = useRouter();
   const { setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -35,7 +36,7 @@ export default function ChapterPage({ params }: PageProps) {
   const [scrollPercent, setScrollPercent] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch chapters and current chapter
   useEffect(() => {
@@ -161,7 +162,7 @@ export default function ChapterPage({ params }: PageProps) {
         />
 
         {/* Content */}
-        <div className="pt-16 pb-24 lg:pt-0">
+        <div className="pt-16 pb-24">
           <ChapterContent content={currentChapter.content} fontSize={fontSize} />
 
           {/* Navigation */}

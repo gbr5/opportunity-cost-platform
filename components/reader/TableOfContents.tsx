@@ -37,8 +37,8 @@ export function TableOfContents({
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 z-40 overflow-y-auto transition-transform duration-300 lg:relative lg:translate-x-0 lg:h-screen pt-16 lg:pt-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:-translate-x-0'
+        className={`fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 z-40 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:w-64 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="p-4 space-y-2">

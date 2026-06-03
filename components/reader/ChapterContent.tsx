@@ -51,7 +51,7 @@ export function ChapterContent({ content, fontSize }: ChapterContentProps) {
               {...props}
             />
           ),
-          code: ({ node, inline, ...props }) =>
+          code: ({ node, inline, ...props }: any) =>
             inline ? (
               <code
                 className="bg-gray-200 dark:bg-slate-800 px-2 py-1 rounded text-sm font-mono text-gray-900 dark:text-gray-200"
