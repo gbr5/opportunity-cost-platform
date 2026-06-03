@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -8,12 +8,16 @@ const pool = new Pool({
 
 const adapter = new PrismaPg(pool);
 
-const globalForPrisma = global as unknown as { prisma: any };
+let prisma: any;
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter,
-  });
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient({ adapter });
+} else {
+  let globalPrisma = global as any;
+  if (!globalPrisma.prisma) {
+    globalPrisma.prisma = new PrismaClient({ adapter });
+  }
+  prisma = globalPrisma.prisma;
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export { prisma };
