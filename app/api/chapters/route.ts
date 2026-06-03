@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         title: product.title,
         slug: product.slug,
       },
-      chapters: product.chapters.map((ch) => ({
+      chapters: product.chapters.map((ch: any) => ({
         id: ch.id,
         title: ch.title,
         slug: ch.slug,
