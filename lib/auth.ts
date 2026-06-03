@@ -64,9 +64,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     signIn: async ({ user, account }) => {
       if (account?.provider === 'google' && user.id) {
-        const product = await prisma.product.findUnique({
+        let product = await prisma.product.findUnique({
           where: { slug: 'custo-de-oportunidade' },
         });
+
+        if (!product) {
+          product = await prisma.product.create({
+            data: {
+              slug: 'custo-de-oportunidade',
+              title: 'Custo de Oportunidade',
+              type: 'BOOK',
+              description:
+                'Uma exploração profunda sobre o custo invisível de nossas escolhas. Entenda por que a maioria das pessoas toma decisões ruins e como enxergar o verdadeiro preço das suas decisões.',
+              status: 'PUBLISHED',
+            },
+          });
+        }
 
         if (product) {
           await prisma.access.upsert({
